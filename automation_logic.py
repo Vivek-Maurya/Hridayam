@@ -89,10 +89,9 @@ def run_automation(excel_path, uid, password, doctor_name, logger_callback=print
             # Here we just wait a bit or assume 'Pinfo' is next
             logger_callback("Navigating to Patient Info...")
             try:
-                 page.wait_for_selector(LOCATORS['Pinfo'], timeout=10000)
-                 page.click(LOCATORS['Pinfo'])
+                page.click(LOCATORS['Pinfo'])
             except:
-                 logger_callback("Warning: Could not find Pinfo link immediately, trying direct navigation...")
+                logger_callback("Warning: EMP ID or Pass is wrong. Refresh the page and try again...")
             
             row_count = 0
             success_count = 0
