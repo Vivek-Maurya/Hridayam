@@ -6,7 +6,8 @@ import time
 
 # --- CONFIGURATION ---
 URL = 'https://hridayampsp.com/login'
-USER_DATA_DIR = "C:/Users/Vivek Maurya/Desktop/playwright_user_data"
+# Use a relative path for user data that works on both Windows and Linux
+USER_DATA_DIR = os.path.join(os.getcwd(), "playwright_user_data") 
 
 LOCATORS = {
     'UID':           '//*[@id="email"]',
@@ -59,10 +60,14 @@ def run_automation(excel_path, uid, password, doctor_name, logger_callback=print
     logger_callback("Launching Browser...")
     with sync_playwright() as p:
         try:
+            # Check for existing user data dir, create if not exists
+            if not os.path.exists(USER_DATA_DIR):
+                os.makedirs(USER_DATA_DIR)
+
             browser = p.chromium.launch_persistent_context(
                 user_data_dir=USER_DATA_DIR,
-                headless=False,
-                args=["--start-maximized"]
+                headless=True, # Must be True for Render/Server environments
+                args=["--start-maximized", "--no-sandbox", "--disable-setuid-sandbox"] # Added flags for stability
             )
             
             page = browser.pages[0] if browser.pages else browser.new_page()
