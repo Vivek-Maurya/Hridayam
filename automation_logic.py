@@ -61,12 +61,18 @@ def run_automation(excel_path, uid, password, doctor_name, logger_callback=print
     with sync_playwright() as p:
         try:
             browser = p.chromium.launch(
+                channel="chromium",
                 headless=True, # Must be True for Render/Server environments
-                args=["--start-maximized", "--no-sandbox", "--disable-setuid-sandbox"] # Added flags for stability
+                args=[
+                     "--no-sandbox",
+                     "--disable-setuid-sandbox",
+                     "--disable-dev-shm-usage",
+                     "--disable-gpu"
+                    ] # Added flags for stability
             )
             
             # Create a new context with no viewport to respect maximized arg
-            context = browser.new_context(no_viewport=True)
+            context = browser.new_context()
             page = context.new_page()
             
             # Login
@@ -147,7 +153,7 @@ def run_automation(excel_path, uid, password, doctor_name, logger_callback=print
                     logger_callback(f"Error on row {row_count}: {e}")
 
             logger_callback(f"Automation Complete. {success_count}/{row_count} rows processed.")
-            # browser.close() # Keep open? Usually web automation closes it or we keep it open.
+            browser.close() # Keep open? Usually web automation closes it or we keep it open.
             # Context manager closes it automatically.
             
         except Exception as e:
