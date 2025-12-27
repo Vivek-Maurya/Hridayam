@@ -72,11 +72,19 @@ def run_automation(excel_path, uid, password, doctor_name, logger_callback=print
             
             # Create a new context with no viewport to respect maximized arg
             context = browser.new_context()
-            page = context.new_page()
             
+            # --- OPTIMIZATION: Block unnecessary resources ---
+            # This drastically speeds up loading on servers by skipping images and fonts
+            page = context.new_page()
+            try:
+                page.route("**/*.{png,jpg,jpeg,gif,webp,ttf,woff,woff2}", lambda route: route.abort())
+            except:
+                pass
+            # -------------------------------------------------
+
             # Login
             logger_callback("Navigating to Login Page...")
-            page.goto(URL, wait_until='networkidle')
+            page.goto(URL, wait_until='domcontentloaded') # Faster than networkidle
             
             logger_callback("Performing Login...")
             page.fill(LOCATORS['UID'], uid)
