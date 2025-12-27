@@ -33,6 +33,28 @@ def start_automation():
     if not uid or not password or not doctor_name or not file:
         return jsonify({'error': 'Missing fields'}), 400
 
+    # --- SINGLE USER CONSTRAINT CHECK ---
+    # Check if any OTHER session is currently running
+    active_session_found = False
+    sessions_to_remove = []
+
+    for sid, session_data in sessions.items():
+        thread = session_data.get('thread')
+        if thread and thread.is_alive():
+            active_session_found = True
+            break
+        else:
+            # Mark finished sessions for cleanup
+            sessions_to_remove.append(sid)
+    
+    # Clean up dead sessions to free memory
+    for sid in sessions_to_remove:
+        del sessions[sid]
+
+    if active_session_found:
+        return jsonify({'error': 'System Busy: Another user is running an automation. Please try again in 2-3 minutes.'}), 429
+    # ------------------------------------
+
     # Generate Session ID
     session_id = str(uuid.uuid4())
     

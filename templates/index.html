@@ -181,6 +181,11 @@
 
                 const result = await response.json();
                 if (!response.ok) {
+                    if (response.status === 429) {
+                        alert(result.error); // Show "Please wait..."
+                        setRunningState(false);
+                        return; // Exit function
+                    }
                     throw new Error(result.error || 'Server error');
                 }
 
