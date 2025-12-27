@@ -98,6 +98,8 @@
         const dropArea = document.getElementById('dropArea');
         const fileMsg = document.querySelector('.file-msg');
 
+        let sessionId = null;
+
         // File Upload UI Interaction
         fileInput.addEventListener('click', () => {
             fileInput.value = '';
@@ -172,9 +174,6 @@
             logContent.textContent = "Request sent. Waiting for server...";
 
             try {
-                // Start log stream immediately
-                startLogStream();
-
                 const response = await fetch('/start', {
                     method: 'POST',
                     body: formData
@@ -184,6 +183,11 @@
                 if (!response.ok) {
                     throw new Error(result.error || 'Server error');
                 }
+
+                sessionId = result.session_id;
+
+                // Start log stream after we get the session ID
+                startLogStream(sessionId);
 
                 startBtn.innerHTML = '<span class="btn-text">Running...</span> <i class="fas fa-cog fa-spin"></i>';
 
@@ -200,7 +204,11 @@
             stopBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Stopping...';
 
             try {
-                await fetch('/stop', { method: 'POST' });
+                await fetch('/stop', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sessionId })
+                });
                 logContent.textContent += '\nStop signal sent. Waiting for process to halt...\n';
             } catch (e) {
                 console.error(e);
@@ -236,9 +244,9 @@
             }
         }
 
-        function startLogStream() {
+        function startLogStream(sid) {
             logContent.textContent = "";
-            const eventSource = new EventSource('/stream_logs');
+            const eventSource = new EventSource(`/stream_logs?session_id=${sid}`);
 
             eventSource.onmessage = function (event) {
                 logContent.textContent += event.data + '\n';
